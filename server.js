@@ -19,6 +19,15 @@ mongoose.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.connection.on("connected", () => {
     console.log("Successfully connected to MongoDB");
 });
+app.use(express.static(path.join(__dirname,"./frontend/build")))
+app.get("*",(req,res)=>{
+    res.sendFile(
+        path.join(__dirname,"./frontend/build/index.html"),
+    function(err){
+        res.status(500).send(err)
+    }
+    )
+})
 
 mongoose.connection.on("error", (err) => {
     console.error("MongoDB connection error:", err);

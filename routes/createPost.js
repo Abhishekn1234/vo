@@ -102,33 +102,27 @@ router.put("/comment",requireLogin,(req,res)=>{
 })
 
 router.delete('/deletePost/:postId', requireLogin, (req, res) => {
-    POST.findOne({_id: req.params.postId })
+    POST.findOne({ _id: req.params.postId })
         .populate("postedBy", "_id")
-        .exec((err, post) => {
-            
-
-            if (!post||err) {
-                return res.status(422).json({ error: err });
+        .exec()
+        .then(post => {
+            if (!post) {
+                return res.status(422).json({ error: "Post not found" });
             }
-           
-            
 
             // Check if the user trying to delete the post is the one who created it
-            if (post.postedBy._id.toString() == req.user._id.toString()) {
-                
-               
-                post.remove()
-                .then(result => {
-                   return  res.json({ message: "Post deleted successfully" });
-                }).catch((err) => {
-                    console.error(err);
-                   return res.status(500).json({ error: "Error deleting post" });
-                });
-
-                // Please include the appropriate logic to delete the post and handle success/error
+            if (post.postedBy._id.toString() === req.user._id.toString()) {
+                return post.deleteOne(); 
             } else {
-                return res.status(401).json({ error: "You are not authorized to delete this post" });
+                return Promise.reject("You are not authorized to delete this post");
             }
+        })
+        .then(result => {
+            return res.json({ message: "Post deleted successfully" });
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({ error: err || "Error deleting post" });
         });
 });
 
